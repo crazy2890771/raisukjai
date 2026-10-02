@@ -1,4 +1,4 @@
-const C='raisukjai-8509af5c';const A=["./", "index.html", "game-8509af5c.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "bgx_beach_de06a2f5.webp", "bgx_falls_8436c446.webp", "atlas_0_28042edd.webp", "atlas_1_97bfd162.webp", "atlas_2_28e27ef5.webp", "atlas_3_140e1c91.webp", "atlas_4_51cc08d8.webp"];
+const C='raisukjai-c60e060e';const A=["./", "index.html", "game-c60e060e.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "bgx_beach_de06a2f5.webp", "bgx_falls_8436c446.webp", "bgx_house_b817f1ca.webp", "atlas_0_28042edd.webp", "atlas_1_42f5218c.webp", "atlas_2_a8b00bb9.webp", "atlas_3_7acaf1d6.webp", "atlas_4_c8341c28.webp"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(A)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
