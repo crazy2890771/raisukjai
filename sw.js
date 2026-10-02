@@ -1,4 +1,4 @@
-const C='raisukjai-c60e060e';const A=["./", "index.html", "game-c60e060e.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "bgx_beach_de06a2f5.webp", "bgx_falls_8436c446.webp", "bgx_house_b817f1ca.webp", "atlas_0_28042edd.webp", "atlas_1_42f5218c.webp", "atlas_2_a8b00bb9.webp", "atlas_3_7acaf1d6.webp", "atlas_4_c8341c28.webp"];
+const C='raisukjai-3ed4ea8b';const A=["./", "index.html", "game-3ed4ea8b.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "bgx_beach_de06a2f5.webp", "bgx_falls_8436c446.webp", "bgx_house_b817f1ca.webp", "atlas_0_28042edd.webp", "atlas_1_2c484722.webp", "atlas_2_fa084d60.webp", "atlas_3_9e071451.webp", "atlas_4_a90cf006.webp"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(A)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
