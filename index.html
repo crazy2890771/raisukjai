@@ -87,6 +87,12 @@ table.shop th{font-family:var(--f-display);font-size:12px;opacity:.75}
 .track{position:relative;height:22px;border-radius:12px;background:#9fc9e0;border:3px solid var(--wood);overflow:hidden}
 .track .zone{position:absolute;top:0;bottom:0;background:#6cc24a}
 .track .needle{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:var(--berry);border-radius:3px}
+.track .needle.fishy{top:2px;bottom:auto;width:20px;height:12px;margin-left:-10px;background:#2f5f8a;border-radius:60% 40% 40% 60%;box-shadow:0 0 0 2px #fff}
+.track .zone.off{background:#e0a03a}
+.fishing #tipBox{display:none}
+.fprog{margin-top:5px;height:8px;border-radius:6px;background:rgba(0,0,0,.18);overflow:hidden;border:2px solid var(--wood)}
+.fprog i{display:block;height:100%;width:35%;background:#6cc24a;transition:width .1s linear}
+.mtabs{position:sticky;top:-2px;z-index:2;background:var(--card);padding:4px 0}
 /* villager dialog */
 .npcHead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .npcHead small{opacity:.7}
@@ -264,7 +270,7 @@ body.kb #rotate{display:none!important}
 <div class="sign" id="toast"></div>
 <div class="sign" id="tipBox" role="status" hidden><span class="tipIco" aria-hidden="true">!</span><span id="tipTxt"></span><span class="tipX" aria-hidden="true">✕</span></div>
 
-<div class="sign" id="fishBar" hidden><div id="fishLbl">รอปลากินเบ็ด...</div><div class="track" id="ftrack" hidden><i class="zone" id="fzone"></i><b class="needle" id="fneedle"></b></div></div>
+<div class="sign" id="fishBar" hidden><div id="fishLbl">รอปลากินเบ็ด...</div><div class="track" id="ftrack" hidden><i class="zone" id="fzone"></i><b class="needle" id="fneedle"></b></div><div class="fprog" id="fprogW" hidden><i id="fprog"></i></div></div>
 
 <div class="modal" id="modal" hidden><div class="panel" id="panel" role="dialog" aria-modal="true"></div></div>
 <div id="dayFade" aria-hidden="true"><div id="dayFadeTxt"></div></div>
@@ -272,5 +278,5 @@ body.kb #rotate{display:none!important}
 <div id="rotate"><div class="ph"></div><div>หมุนเครื่องเป็นแนวนอนเพื่อเล่น</div></div>
 
 <script>const PWA=1;</script>
-<script src="game-3ed4ea8b.js"></script>
+<script src="game-37bdfbd6.js"></script>
 </body></html>

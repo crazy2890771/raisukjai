@@ -429,12 +429,13 @@ const GOALS=[
   {t:'เอาผักไปส่งขายที่ถังไม้ข้างแปลง',ok:()=>S.stats.shipped>0,r:50},
   {t:'รดน้ำผักที่ยังไม่ได้น้ำ',ok:()=>S.stats.watered>0,r:30},
   {t:'ปลูกเมล็ดผักบุ้งในแปลงว่าง',ok:()=>S.stats.planted>0,r:30},
+  {t:'ไถดินแปลงใหม่ แล้วปลูกผักให้ครบ 5 แปลง',ok:()=>(S.stats.planted||0)>=5,r:60},
   {t:'เก็บไข่ไก่ในเล้า (ใต้ร้านเมล็ด)',ok:()=>S.col.egg>0,r:50},
   {t:'คุยกับชาวบ้านสักคน',ok:()=>Object.values(S.npc).some(n=>n.h>(n===S.npc.daeng?1:0)),r:50},
+  {t:'ตกปลาที่บ่อน้ำ (มุมซ้ายบนของไร่) ให้ได้ 1 ตัว',ok:()=>['nil','chon','buek','duk','taphien','kung','krai'].some(k=>S.col[k]>0),r:80},
   {t:'กลับบ้านแล้วนอนเพื่อจบวัน',ok:()=>S.day>=2,r:100},
   {t:'ซื้อเมล็ดหรือหญ้าแห้งที่ร้านป้าแดง',ok:()=>S.stats.bought>0,r:50},
   {t:'เติมหญ้าในรางวัว (ในคอกขวามือ)',ok:()=>S.stats.fed>0,r:50},
-  {t:'ตกปลาที่บ่อน้ำให้ได้ 1 ตัว',ok:()=>['nil','chon','buek','duk','taphien','kung','krai'].some(k=>S.col[k]>0),r:80},
   {t:'ทำงานรับจ้างจากกระดานมุมลานหมู่บ้าน',ok:()=>S.stats.job>0,r:100},
   {t:'ช่วยตามคำขอชาวบ้านที่มีป้าย !',ok:()=>Object.values(S.npc).some(n=>n.req&&n.req.done)||S.ledger['คำขอชาวบ้าน'],r:100},
   {t:'เก็บเงินซื้อที่ดินหลังไร่ (ประตูทางใต้)',ok:()=>S.land,r:300},
@@ -649,7 +650,7 @@ function freshState(){
          daeng:{h:1,talked:false,gifted:false,req:null},
          ek:{h:0,talked:false,gifted:false,req:null},nun:{h:0,talked:false,gifted:false,req:null},
          ton:{h:0,talked:false,gifted:false,req:null},phum:{h:0,talked:false,gifted:false,req:null},mint:{h:0,talked:false,gifted:false,req:null},ja:{h:0,talked:false,gifted:false,req:null},sai:{h:0,talked:false,gifted:false,req:null}},
-    land:false,stats:{},ledger:{},goal:0,job:null,opt:{speed:'normal'},mat:{wood:0,stone:0},debris:genDebris(),built:{},build:null,proj:{},col:{ch:0},colClaim:{},forage:[],maxStam:100,ducks:[],horse:false,skills:{farm:0,fish:0,mine:0},qs:{},ribbons:0,pet:null,petOffer:false,decoInv:{},decos:{},story:{i:0,at:1,b:{},pages:0},flags:{},mineMax:0,mineDeep:0,rel:{date:null,spouse:null,wedDay:null,married:null,kidAsk:null,babyDue:null,kid:null},ev:{},perks:{},inv:{jas:0,ring:0},kidPlayed:false,mach:{},known:['d_kb','d_omel','d_rice','d_wmshake','d_corn','d_strawmilk'],stall:null,hot:[],town:{},mkt:{},news:[],sold:{},ja:{order:null,menu:['d_kb','d_omel','d_rice'],biz:0},hike:0,trees:{},pname:'',farm:'ไร่สุขใจ',wxNext:null,storm:false,lastBackup:1,backupShown:0,sq:null,area:null,aF:{},trips:{},museum:{},museumDone:{},bait:null,berries:{},furn:{},inHouse:false,crows:[],fp:null,wo:null,woStreak:0,relics:{},unl:{},firstShip:false};
+    land:false,stats:{},ledger:{},goal:0,goalV:2,job:null,opt:{speed:'normal'},mat:{wood:0,stone:0},debris:genDebris(),built:{},build:null,proj:{},col:{ch:0},colClaim:{},forage:[],maxStam:100,ducks:[],horse:false,skills:{farm:0,fish:0,mine:0},qs:{},ribbons:0,pet:null,petOffer:false,decoInv:{},decos:{},story:{i:0,at:1,b:{},pages:0},flags:{},mineMax:0,mineDeep:0,rel:{date:null,spouse:null,wedDay:null,married:null,kidAsk:null,babyDue:null,kid:null},ev:{},perks:{},inv:{jas:0,ring:0},kidPlayed:false,mach:{},known:['d_kb','d_omel','d_rice','d_wmshake','d_corn','d_strawmilk'],stall:null,hot:[],town:{},mkt:{},news:[],sold:{},ja:{order:null,menu:['d_kb','d_omel','d_rice'],biz:0},hike:0,trees:{},pname:'',farm:'ไร่สุขใจ',wxNext:null,storm:false,lastBackup:1,backupShown:0,sq:null,area:null,aF:{},trips:{},museum:{},museumDone:{},bait:null,berries:{},furn:{},inHouse:false,crows:[],fp:null,wo:null,woStreak:0,relics:{},unl:{},firstShip:false};
 }
 function genDebris(){
   const d={};
@@ -662,6 +663,7 @@ let S, hadSave=false;
 try{const raw=localStorage.getItem(SAVE); if(raw){S=JSON.parse(raw);hadSave=true;}}catch(e){}
 if(!S||!S.plots)S=freshState();
 function migrate(){
+  if(S.goalV===undefined){const m=[0,1,2,3,5,6,8,9,10,7,11,12,13,14,15,16];S.goal=m[Math.min(S.goal||0,15)];S.goalV=2;}
   const f=freshState();
   for(const k of ['hay','trough','cows','npc','hens','seeds','tools','festDone','kt','luck','land','mat','debris','built','build','proj','col','colClaim','forage','maxStam','bin','mach','known','stall','hot','rel','ev','perks','inv','kidPlayed','skills','qs','ribbons','pet','petOffer','decoInv','decos','story','flags','ducks','horse','mineMax','mineDeep','stats','ledger','goal','job','opt','town','mkt','news','sold','ja','hike','trees','farm','wxNext','storm','lastBackup','backupShown','sq','area','aF','trips','museum','museumDone','bait','berries','furn','inHouse','crows','fp','wo','woStreak','relics','unl','firstShip'])if(S[k]===undefined)S[k]=f[k];
   if(S.tips===undefined)S.tips=hadSave?Object.fromEntries(['move','c_เก็บ','c_ไถดิน','c_ปลูก','c_รดน้ำ','c_ตกปลา','c_คุย','c_เก็บไข่','c_รีดนม','c_ร้าน','c_เข้าเหมือง','c_ช่างไม้','stam','night','rain','market','fest'].map(k=>[k,1])):{};
@@ -916,22 +918,23 @@ addEventListener('keydown',e=>{
   if(!modal.hidden)return;
   {const ae=document.activeElement;if(ae&&ae!==document.body&&ae.blur&&!panel.contains(ae))ae.blur();}
   if(e.repeat)return;
-  if(e.code==='Space'||e.code==='KeyE'||e.code==='Enter'){e.preventDefault();doAction();return;}
+  if(e.code==='Space'||e.code==='KeyE'||e.code==='Enter'){e.preventDefault();holdAct=true;if(!e.repeat||!fish)doAction();return;}
   const hot={KeyB:'bagBtn',KeyI:'bagBtn',KeyC:'calBtn',KeyJ:'bookBtn',KeyQ:'seedChip',KeyR:'rideBtn'}[e.code];
   if(hot){const el=$(hot);if(el&&!el.hidden){e.preventDefault();el.click();}return;}
   if(e.code==='KeyF'){e.preventDefault();openEat();}
   if(e.code==='KeyM'){e.preventDefault();openMap();}
   if(e.code==='KeyN'){e.preventDefault();audioInit();setMusic(!AU.music);toast(AU.music?'เปิดเพลงแล้ว':'ปิดเพลงแล้ว');}
 });
-addEventListener('keyup',e=>{const mv=KMOVE[e.code];if(mv)keys[mv]=false;});
+addEventListener('keyup',e=>{const mv=KMOVE[e.code];if(mv)keys[mv]=false;if(e.code==='Space'||e.code==='KeyE'||e.code==='Enter')holdAct=false;});
+addEventListener('blur',()=>{holdAct=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 addEventListener('pointerdown',e=>{if(e.pointerType==='touch')setKbMode(false);},true);
 {const cvEl=$('cv');let t0=null;cvEl.addEventListener('pointerdown',e=>{t0={x:e.clientX,y:e.clientY,t:performance.now()};});cvEl.addEventListener('pointerup',e=>{if(t0&&performance.now()-t0.t<350&&Math.hypot(e.clientX-t0.x,e.clientY-t0.y)<12)tapMove(e.clientX,e.clientY);t0=null;});}
 try{if(matchMedia('(hover:hover) and (pointer:fine)').matches)setKbMode(true);}catch(e){}
 
 const actBtn=$('actBtn');
-actBtn.addEventListener('pointerdown',e=>{e.preventDefault();actBtn.classList.add('press');doAction();});
-['pointerup','pointercancel','pointerleave'].forEach(t=>actBtn.addEventListener(t,()=>actBtn.classList.remove('press')));
+actBtn.addEventListener('pointerdown',e=>{e.preventDefault();actBtn.classList.add('press');holdAct=true;doAction();});
+['pointerup','pointercancel','pointerleave'].forEach(t=>actBtn.addEventListener(t,()=>{actBtn.classList.remove('press');holdAct=false;}));
 actBtn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doAction();}});
 
 // ---------- helpers ----------
@@ -976,13 +979,14 @@ let toastT=0;
 let tipQ=[],tipCur=null,tipT=0,tipCd=1.5,tipChk=0;
 function tip(id,txt){S.tips=S.tips||{};if(S.tips[id]||(tipCur&&tipCur.id===id)||tipQ.some(t=>t.id===id))return;tipQ.push({id,txt});}
 setTimeout(()=>{const b=$('tipBox');if(b)b.addEventListener('pointerdown',e=>{e.stopPropagation();hideTip();});},0);
-function hideTip(){const b=$('tipBox');if(b){b.classList.remove('show');setTimeout(()=>{if(!tipCur)b.hidden=true;},250);}tipCur=null;tipCd=1.4;}
+const TIP_GAP=45,TIP_PRI=['stam','night','storm','storm2','sick','crow0'];
+function hideTip(){const b=$('tipBox');if(b){b.classList.remove('show');setTimeout(()=>{if(!tipCur)b.hidden=true;},250);}tipCur=null;tipCd=TIP_GAP;}
 const kbm=()=>document.body.classList.contains('kb');
 const TIP_CTX={'เข้าชม':'พิพิธภัณฑ์หมู่บ้าน! บริจาคของหายากที่เจอ เช่น ไข่มุก ปลาพลวงหิน อัญมณี ครบห้องได้รางวัลถาวร','ขึ้นรถ':'ป้ายรถสองแถว! นั่งไปเที่ยวชายหาดหรือน้ำตกบนเขา ค่ารถ ฿50 มีของหายาก ปลาชนิดใหม่ และของป่าเกิดใหม่ทุกวัน','เก็บ':'ผักสุกแล้ว! เก็บแล้วเอาไปใส่ถังส่งขายข้างแปลง เงินเข้าเช้าวันถัดไป',
   'ไถดิน':'ไถดิน → ปลูก → รดน้ำทุกวัน ผักโตวันละขั้น ถ้าลืมรดน้ำ ผักจะไม่โต',
   'ปลูก':()=>`เปลี่ยนเมล็ดได้ที่ปุ่มผักมุมขวาบน${kbm()?' (ปุ่ม Q)':''} ผักแต่ละชนิดปลูกได้เฉพาะบางฤดู`,
   'รดน้ำ':'รดน้ำวันละครั้งพอ วันฝนตกไม่ต้องรด',
-  'ตกปลา':()=>`${kbm()?'กด Space ':'แตะปุ่มขวา'}เหวี่ยงเบ็ด รอจนขึ้นว่าปลากินเบ็ด แล้ว${kbm()?'กดอีกครั้ง':'แตะอีกครั้ง'}ตอนเข็มอยู่ช่องเขียว`,
+  'ตกปลา':()=>`${kbm()?'กด Space ':'แตะปุ่มขวา'}เหวี่ยงเบ็ด รอจนปลากินเบ็ดแล้วกดดึง จากนั้นกดค้าง-ปล่อยให้ช่องเขียวตามตัวปลาจนแถบเต็ม`,
   'คุย':'คุยกับชาวบ้านวันละครั้งได้หัวใจ +1 ให้ของที่ชอบได้หัวใจเยอะ ป้าย ! แปลว่ามีเรื่องขอให้ช่วย',
   'เก็บไข่':'ลูบหัวสัตว์ทุกวัน ยิ่งสนิท ไข่และนมยิ่งมีคุณภาพ อย่าลืมเติมหญ้าในรางวัว','รีดนม':'ลูบหัวสัตว์ทุกวัน ยิ่งสนิท ไข่และนมยิ่งมีคุณภาพ อย่าลืมเติมหญ้าในรางวัว',
   'ส่งขาย':'ราคาของเปลี่ยนทุกวัน เลือกเก็บของที่ราคาตกไว้ขายวันอื่นได้ ดูข่าวตลาดในรายงานตอนเช้า',
@@ -991,7 +995,7 @@ const TIP_CTX={'เข้าชม':'พิพิธภัณฑ์หมู่�
   'เข้าเหมือง':'ในเหมืองทุบหินหาแร่ ยิ่งลึกยิ่งมีของดี ถ้าแรงหมดจะหมดสติ',
   'ช่างไม้':'ช่างเอกสร้างโรงเรือน ขยายเล้า ต่อเติมบ้าน ใช้ไม้กับหินจากการผ่าตอและทุบหิน'};
 function checkTips(dt){
-  const b=$('tipBox');if(!b)return;
+  const b=$('tipBox');if(!b)return;if(fish&&fish.phase!=='wait'||rocket||sandG)return;
   if(tipCur){if(modal.hidden)tipT-=dt;if(tipT<=0)hideTip();return;}
   tipChk-=dt;if(tipChk<=0&&modal.hidden&&scene){tipChk=.5;
     if(!S.tips||!S.tips.move)tip('move',kbm()?'เดินด้วย W A S D แล้วกด Space ทำงานกับสิ่งที่หันหน้าไป กด Esc เปิดเมนู':'ลากวงล้อซ้ายเพื่อเดิน แล้วแตะปุ่มขวาล่างเพื่อทำงานกับสิ่งที่หันหน้าไป');
@@ -1006,8 +1010,10 @@ function checkTips(dt){
     if(S.goal>=GOALS.length)tip('sq','ภารกิจประจำฤดูมาแล้ว! แตะแถบเป้าหมายด้านล่างเพื่อดูทั้ง 5 ข้อ ทำครบได้รางวัลพิเศษ');
     if(festOn())tip('fest','วันนี้มีงานเทศกาล! ชาวบ้านไปรวมกันที่ลาน ดูรายละเอียดในปฏิทิน');
     if(S.day>=YEAR-6&&!S.evalBest)tip('eval',`อีก ${nextEvalIn()} วันครบ 1 ปี ยายสายจะนำจดหมายของคุณตามาประเมินไร่ ลองดูว่าคุณตาให้คะแนนจากอะไรในคู่มือ`);}
-  tipCd-=dt;if(tipCd>0||!tipQ.length||!modal.hidden)return;
-  tipCur=tipQ.shift();S.tips=S.tips||{};S.tips[tipCur.id]=1;tipT=Math.min(11,4+tipCur.txt.length/14);
+  tipCd-=dt;if(!tipQ.length||!modal.hidden)return;
+  tipQ=tipQ.filter(t=>!t.id.startsWith('c_')||(ctxCache&&ctxCache.l===t.id.slice(2)&&!ctxCache.dis));if(!tipQ.length)return;
+  const pi=tipQ.findIndex(t=>TIP_PRI.includes(t.id));if(tipCd>0&&!(pi>=0&&tipCd<TIP_GAP-8))return;
+  tipCur=tipQ.splice(pi>=0?pi:0,1)[0];S.tips=S.tips||{};S.tips[tipCur.id]=1;tipT=Math.min(11,4+tipCur.txt.length/14);
   $('tipTxt').textContent=tipCur.txt;b.hidden=false;void b.offsetWidth;b.classList.add('show');
 }
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');toastT=2.6;}
@@ -1025,31 +1031,39 @@ function meterHide(){meterBox.hidden=true;ftrack.hidden=true;}
 // fishing
 let fish=null;
 function startFish(tx,ty){const bb=baitFor(waterLoc(tx,ty));fish={phase:'wait',t:0,wait:(1.2+Math.random()*2.6)*(lvl('fish')>=5?.7:1)*(bb?bb.fast:1),tx,ty};meterShow('รอปลากินเบ็ด...');ftrack.hidden=true;}
-function endFish(){fish=null;if(!rocket)meterHide();}
+function endFish(){fish=null;holdAct=false;$('fneedle').classList.remove('fishy');$('fzone').classList.remove('off');$('fprogW').hidden=true;if(!rocket)meterHide();}
+let holdAct=false;
 function updateFish(dt){
   if(!fish)return;
   fish.t+=dt;
   if(fish.phase==='wait'&&fish.t>=fish.wait){
     let f=pickFish(waterLoc(fish.tx,fish.ty));
-    f={...f,zone:Math.min(.45,f.zone*(S.perks.rod?1.3:1)*(S.perks.mfish?1.1:1)*(1+(lvl('fish')-1)*.04))};Object.assign(fish,{phase:'bite',t:0,f,pos:0,dir:1,z0:.1+Math.random()*(.8-f.zone)});
-    meterShow('ปลากินเบ็ด! กด ดึง ตอนเข็มอยู่ช่องเขียว');meterZone(fish.z0,f.zone);sfx('bite');
+    f={...f,zone:Math.min(.45,f.zone*(S.perks.rod?1.3:1)*(S.perks.mfish?1.1:1)*(1+(lvl('fish')-1)*.04))};Object.assign(fish,{phase:'bite',t:0,f});
+    meterShow('ปลากินเบ็ด! กด ดึง เลย');ftrack.hidden=true;sfx('bite');
   }
-  if(fish.phase==='bite'){
-    fish.pos+=fish.dir*fish.f.sp*dt;
-    if(fish.pos>1){fish.pos=1;fish.dir=-1;} if(fish.pos<0){fish.pos=0;fish.dir=1;}
-    meterNeedle(fish.pos);
-    if(fish.t>(lvl('fish')>=7?4.8:3.6)){toast('ปลาหลุดไปแล้ว');sfx('fail');endFish();}
+  if(fish.phase==='bite'&&fish.t>(lvl('fish')>=7?2.4:1.7)){toast('ช้าไป ปลาหนีไปแล้ว');sfx('fail');endFish();return;}
+  if(fish.phase==='fight'){const F=fish,f=F.f;
+    F.zv+=(holdAct?2.5:-2.1)*dt;F.zv=Math.max(-1.15,Math.min(1.15,F.zv));F.z+=F.zv*dt;
+    if(F.z<0){F.z=0;F.zv=Math.max(0,F.zv)*.3;}if(F.z>1-F.zw){F.z=1-F.zw;F.zv=Math.min(0,F.zv)*.3;}
+    F.tt-=dt;if(F.tt<=0){const wild=f.w<=15?1:f.w<30?.7:.45;let tg=F.fp+(Math.random()-.5)*wild*1.6;if(tg<.36)tg=.36+Math.random()*.35;F.tgt=Math.max(.36,Math.min(.97,tg));F.tt=(.5+Math.random()*.9)/(f.sp*.8);}
+    F.fp+=(F.tgt-F.fp)*Math.min(1,dt*f.sp*1.7);
+    const inZ=F.fp>=F.z&&F.fp<=F.z+F.zw;F.prog+=inZ?dt*.3:-dt*(lvl('fish')>=7?.17:.24);
+    meterZone(F.z,F.zw);meterNeedle(F.fp);$('fzone').classList.toggle('off',!inZ);$('fprog').style.width=Math.round(Math.max(0,Math.min(1,F.prog))*100)+'%';
+    if(F.prog>=1){catchFish();return;}
+    if(F.prog<=0){toast(f.w<=15?'ปลาใหญ่ดิ้นหลุดไปแล้ว! เกือบได้':'ปลาหลุด! ลองใหม่');sfx('fail');endFish();}
   }
 }
-function reel(){const caught=fish&&fish.phase==='bite'&&fish.pos>=fish.z0&&fish.pos<=fish.z0+fish.f.zone;if(sprOk('act_fishreel_right_0'))startAct('fishreel',null,{hold:caught?.6:0});
-  if(fish.phase==='wait'){toast('ดึงเร็วไป ปลาตกใจหนี');sfx('fail');endFish();return;}
-  const f=fish.f;
-  if(fish.pos>=fish.z0&&fish.pos<=fish.z0+f.zone){
-    if(waterLoc(fish.tx,fish.ty)==='pond'&&lvl('fish')>=4&&!(S.berries&&S.berries.pond)&&Math.random()<.06)giveBerry('pond','เบ็ดเกี่ยวกิ่งไม้เล็กๆ ขึ้นมาพร้อมปลา มีผลสีม่วงเรืองแสงติดอยู่');
-    gain(f.k);stat('fish');xp('fish',f.k==='buek'||f.k==='cavefish'||f.k==='lobster'||f.k==='mahseer'||f.k==='insee'?20:f.w<30?12:8);pop(fish.tx+.5,fish.ty+.2,'+1 '+ITEMS[f.k].n,f.k==='buek'?'#ffe07a':'#fff');sfx('catch');
-    toast(f.k==='buek'?'ปลาบึก! ตัวใหญ่มาก':f.k==='lobster'?'กุ้งมังกร! หายากมาก':f.k==='mahseer'?'ปลาพลวงหิน! ปลาน้ำตกตัวใหญ่':f.k==='insee'?'ปลาอินทรี! ปลาทะเลลึกตัวใหญ่':`ได้${ITEMS[f.k].n}`);
-  }else{toast('ปลาหลุด! ลองใหม่');sfx('fail');}
-  endFish();
+function startFight(){const f=fish.f,zw=Math.min(.34,.14+f.zone*.6);Object.assign(fish,{phase:'fight',t:0,zw,z:.5-zw/2,zv:0,fp:.5,tgt:.5,tt:.3,prog:.35});
+  meterShow(kbm()?'กด Space ค้าง = ช่องเขียวไปขวา · ปล่อย = กลับซ้าย · ให้ปลาอยู่ในช่องจนแถบเต็ม':'แตะปุ่มขวาค้าง = ช่องเขียวไปขวา · ปล่อย = กลับซ้าย · ให้ปลาอยู่ในช่องจนแถบเต็ม');if(tipCur)hideTip();ftrack.hidden=false;$('fneedle').classList.add('fishy');$('fprogW').hidden=false;sfx('bite');
+}
+function catchFish(){const f=fish.f;if(sprOk('act_fishreel_right_0'))startAct('fishreel',null,{hold:.6});
+  if(waterLoc(fish.tx,fish.ty)==='pond'&&lvl('fish')>=4&&!(S.berries&&S.berries.pond)&&Math.random()<.06)giveBerry('pond','เบ็ดเกี่ยวกิ่งไม้เล็กๆ ขึ้นมาพร้อมปลา มีผลสีม่วงเรืองแสงติดอยู่');
+  gain(f.k);stat('fish');xp('fish',f.k==='buek'||f.k==='cavefish'||f.k==='lobster'||f.k==='mahseer'||f.k==='insee'?20:f.w<30?12:8);pop(fish.tx+.5,fish.ty+.2,'+1 '+ITEMS[f.k].n,f.k==='buek'?'#ffe07a':'#fff');sfx('catch');
+  toast(f.k==='buek'?'ปลาบึก! ตัวใหญ่มาก':f.k==='lobster'?'กุ้งมังกร! หายากมาก':f.k==='mahseer'?'ปลาพลวงหิน! ปลาน้ำตกตัวใหญ่':f.k==='insee'?'ปลาอินทรี! ปลาทะเลลึกตัวใหญ่':`ได้${ITEMS[f.k].n}`);
+  endFish();}
+function reel(){
+  if(fish.phase==='wait'){if(sprOk('act_fishreel_right_0'))startAct('fishreel',null,{hold:0});toast('ดึงเร็วไป ปลาตกใจหนี');sfx('fail');endFish();return;}
+  if(fish.phase==='bite'){startFight();return;}
 }
 
 // bang fai rocket
@@ -1089,7 +1103,7 @@ function context(){
 function context0(){
   if(rocket)return{l:'จุด!',h:'กดตอนเข็มอยู่กลางช่องเขียว',fn:fireRocket};
   if(sandG)return{l:'ก่อ!',h:'กดตอนเข็มอยู่กลางช่องเขียว',fn:sandHit};
-  if(fish)return fish.phase==='bite'?{l:'ดึง!',h:'กดตอนเข็มอยู่ช่องเขียว',fn:reel}:{l:'ดึง!',h:'รอให้ปลากินเบ็ดก่อน',fn:reel};
+  if(fish)return fish.phase==='fight'?{l:'ดึง!',h:'กดค้างให้ช่องเขียวตามตัวปลา',fn:()=>{}}:fish.phase==='bite'?{l:'ดึง!',h:'ปลากินเบ็ดแล้ว กดเลย!',fn:reel}:{l:'ดึง!',h:'รอให้ปลากินเบ็ดก่อน',fn:reel};
   if(scene==='mine')return mineContext();
   if(scene==='area')return areaContext();
   if(scene==='house')return houseContext();
@@ -1155,7 +1169,7 @@ function context0(){
     if(open)return{l:'แผงขาย',h:S.stall&&S.stall.items.length?`วางขาย ${S.stall.items.reduce((a,i)=>a+i.n,0)} ชิ้น · ขายได้ ฿${S.stall.earned}`:'ตลาดนัดเปิดแล้ว วางของขายได้',fn:()=>{sfx('ui');openStall();}};
     return{l:'—',h:`แผงของฉัน · ตลาดนัดทุกวันเสาร์ 08:00–15:00${weekday()===5&&S.t<MARKET.from?' (วันนี้)':''}`,dis:true};}
   if(c==='b'){const v=binValue();return v?{l:'ส่งขาย',h:`ของในกระเป๋า ฿${v} · เลือกได้ว่าจะขายอะไร`,fn:()=>{shipSel=null;sfx('ui');openShip();}}:{l:'ส่งขาย',h:'ตะกร้ายังว่าง',dis:true};}
-  if(c==='k')return{l:'ร้าน',h:'เมล็ด หญ้าแห้ง สัตว์ อัปเกรดเครื่องมือ',fn:()=>{sfx('ui');openShop();}};
+  if(c==='k')return{l:'ร้าน',h:'เมล็ด หญ้าแห้ง สัตว์ อัปเกรดเครื่องมือ',fn:()=>{sfx('ui');if(!S.npc.daeng.talked&&folksOut()&&!festActive()){openNpc('daeng');}else openShop();}};
   if(c==='e'){
     const f=festOn();
     if(f&&f.id==='bangfai'){
@@ -1186,7 +1200,7 @@ function context0(){
     if(S.t>=900)return{l:'—',h:'บ่ายแล้ว พรุ่งนี้เช้าค่อยปล่อยวัวออกเล็มหญ้า',dis:true};
     return{l:'ปล่อยวัว',h:'เปิดคอกให้วัวเล็มหญ้าวันแดดดี · ไม่ต้องเติมหญ้า และสนิทขึ้น',fn:()=>{S.graze=S.day;sfx('moo');toast('ปล่อยวัวออกเล็มหญ้าแล้ว วันนี้ไม่ต้องเติมหญ้า');stat('graze');}};}
   if(c==='L')return{l:'ซื้อที่ดิน',h:`ที่รกร้างหลังไร่ 91 แปลง · ฿${LAND_PRICE}`,fn:openLand};
-  if(c==='c')return{l:'ช่างไม้',h:'สร้างอาคาร ซื้อไม้และหิน',fn:()=>{sfx('ui');openCarpenter();}};
+  if(c==='c')return{l:'ช่างไม้',h:'สร้างอาคาร ซื้อไม้และหิน',fn:()=>{sfx('ui');if(!S.npc.ek.talked&&folksOut()&&!festActive()){openNpc('ek');}else openCarpenter();}};
   if(c==='N')return{l:'กระดาน',h:S.job&&!S.job.done?`งานรับจ้าง: ${ITEMS[S.job.k].n} ×${S.job.q} ได้ ฿${S.job.r}`:'กระดานพัฒนาหมู่บ้าน',fn:()=>{sfx('ui');openBoard();}};
   if(c==='T')return{l:'—',h:S.proj.temple.done?'วัดประจำหมู่บ้าน สวยงามแล้ว':'วัดเก่าทรุดโทรม · บูรณะได้ที่กระดานพัฒนาหมู่บ้าน',dis:true};
   if(c==='B')return{l:'—',h:'สะพานพัง · ซ่อมได้ที่กระดานพัฒนาหมู่บ้าน',dis:true};
@@ -1531,6 +1545,7 @@ panel.addEventListener('click',e=>{
   if(b.dataset.dgo){const [id,k]=b.dataset.dgo.split(':');goDate(id,k);return;}
   if(b.dataset.map!==undefined){sfx('ui');openMap();return;}
   if(b.dataset.book!==undefined){sfx('ui');openBook();return;}
+  if(b.dataset.mtab){const [k,v]=b.dataset.mtab.split(':');MTAB[k]=v;sfx('ui');({shop:openShop,carp:openCarpenter,book:openBook})[k]();const mb=panel.querySelector('.mBody');if(mb)mb.scrollTop=0;return;}
   if(b.dataset.wo!==undefined){woDeliver();return;}
   if(b.dataset.fry){const k=b.dataset.fry,X=FISHF[k];if(!S.fp&&S.money>=X.p){S.money-=X.p;S.fp={k,g:0,fed:false,miss:0,ready:false};sfx('splash');openPond(`ปล่อย${X.n}ลงบ่อแล้ว อย่าลืมให้อาหารทุกวัน`);}return;}
   if(b.dataset.ffeed){const n=+b.dataset.ffeed;if(S.money>=n*FEED_PRICE){S.money-=n*FEED_PRICE;S.inv.ffeed=(S.inv.ffeed||0)+n;sfx('coin');openPond();}return;}
@@ -1724,6 +1739,93 @@ function tryReconcile(id){const R=S.rel;if(R.fight&&R.mood>=50){R.fight=false;R.
 function face(id,e){const k=`pt_${id}_${e||0}`;
   if(sprOk(k))return`<span class="pt" aria-hidden="true" style="${sprBg(k,76,76)}"></span>`;
   const c=`c_${id}_down`;if(sprOk(c))return`<span class="pt crop" aria-hidden="true" style="${sprBg(c,76,76,{w:1.45,fy:.03})}"></span>`;return'';}
+// ---------- villager dialogue: tier / season / weather / time / village news ----------
+const TALK={
+  mee:{t:[["ลุงนั่งตกปลาตรงนี้มาตั้งแต่ตาเอ็งยังหนุ่ม","เบ็ดดีไม่สำคัญเท่าใจเย็นหรอก","ตอนเช้าตรู่ปลานิลกินเบ็ดดีที่สุด","ถ้าเหนื่อยก็มานั่งริมบ่อกับลุง ลมเย็นดี"],
+      ["{n} ตกปลาเป็นแล้วยัง ลุงสอนให้ได้นะ","ปลาช่อนชอบออกตอนฝนตก จำไว้","ตาเอ็งเคยตกปลาบึกได้ตัวเท่าแขนลุงเลย","เมื่อวานลุงได้ปลาดุกตัวโต เอาไปแกงกับยายสาย","ลำธารฝั่งโน้นมีปลาตะเพียนเยอะ ลองไปดูสิ","ทำไร่ก็เหมือนตกปลา ต้องรอเป็น"],
+      ["ลุงไม่มีลูกหลาน เห็นเอ็งขยันแบบนี้ลุงก็ชื่นใจ","{farm}กลับมาเขียวเหมือนสมัยตาเอ็งแล้วนะ","วันไหนลุงไม่อยู่ ฝากดูบ่อนี้ด้วยนะ","เอ็งเป็นคนแรกที่ลุงยอมบอกจุดปลาชุมให้","อยู่ที่นี่นานๆ นะ หมู่บ้านคึกคักขึ้นเยอะเพราะเอ็ง","ลุงเก็บเบ็ดคันเก่าของตาเอ็งไว้ วันหนึ่งจะให้"]],
+    s:[["แดดแรงแบบนี้ปลาลงลึก ต้องรอเย็นๆ","หน้าร้อนน้ำในบ่อลดเยอะเลย","สงกรานต์ปีนี้ลุงจะไปเล่นน้ำด้วย"],["หน้าฝนปลาชุมที่สุดในปี","ระวังลื่นริมบ่อนะ ดินเปียก","ฝนแบบนี้กุ้งในลำธารตัวโต"],["หน้าหนาวลมแรง ปลากินเบ็ดช้าหน่อย","เช้าๆ หมอกลงทั้งบ่อ สวยดีนะ","อากาศเย็นแบบนี้ต้มยำปลาช่อนเข้ากันที่สุด"]],
+    rain:["ฝนตกก็ยังตกปลาได้ ลุงชินแล้ว","ฝนตกแบบนี้ไม่ต้องรดน้ำผัก สบายเอ็งเลย"],night:["ดึกแล้ว ลุงกำลังจะกลับบ้าน","กลางคืนปลาดุกออกหากิน ลองดูสิ"],morn:["ตื่นเช้าดีนะ ปลากำลังหิวเลย"]},
+  fon:{t:[["ขนมชั้นที่ร้านทำสดทุกเช้าค่ะ","ไร่ของคุณตาเคยมีแตงโมหวานที่สุดในหมู่บ้านเลย","ถ้ามีไข่ไก่เหลือ ฉันเอาไปทำขนมได้นะคะ","ยินดีที่ได้รู้จักนะคะ เรียกฉันว่าฝนก็ได้"],
+      ["{n} ชอบขนมแบบไหนคะ หวานน้อยหรือหวานมาก","วันนี้ทำทองหยิบไม่สวยเลย มือสั่นนิดหน่อย","สตรอว์เบอร์รีหน้าหนาวเอามาทำนมสดอร่อยมากเลยค่ะ","ฉันฝันอยากเปิดร้านขนมในเมืองสักวัน","ป้าแดงชอบมาชิมขนมฟรีทุกเช้าเลย ฮ่าๆ","ถ้าเหนื่อยแวะมากินขนมได้นะคะ"],
+      ["ทุกครั้งที่ทำขนมเผื่อ ฉันนึกถึง{n}ก่อนเลย","อยู่ใกล้{n}แล้วสบายใจจัง","ฉันคิดสูตรขนมใหม่ ตั้งชื่อว่า{farm}ด้วยนะ","ขอบคุณที่ชอบขนมของฉันจริงๆ นะคะ","วันไหนว่างไปเดินตลาดด้วยกันไหมคะ","ฉันว่าหมู่บ้านนี้น่าอยู่ขึ้นตั้งแต่{n}มา"]],
+    s:[["แดดแรงแบบนี้ต้องแตงโมปั่นค่ะ","มะม่วงหน้าร้อนหวานที่สุด","ทำขนมตอนหน้าร้อน ร้อนมือมากเลย"],["หน้าฝนแป้งขึ้นรายากหน่อยค่ะ","ฝนตกแบบนี้ขายขนมได้น้อยลง","ฟังเสียงฝนแล้วอยากกินขนมถ้วยอุ่นๆ"],["หน้าหนาวฉันชอบทำสังขยาฟักทอง","อากาศเย็นขนมเก็บได้นานขึ้นค่ะ","ลมหนาวมาแล้ว ใส่เสื้อหนาๆ นะคะ"]],
+    rain:["ฝนตกแต่ใจฉันยังสดใสค่ะ","อย่าลืมกางร่มนะคะ"],night:["ดึกแล้ว ฉันต้องตื่นตีสี่มานึ่งขนม","ฝันดีนะคะ"],morn:["อรุณสวัสดิ์ค่ะ เพิ่งนึ่งขนมเสร็จพอดี"]},
+  daeng:{t:[["มาซื้อเมล็ดเหรอจ๊ะ วันนี้ของใหม่เพิ่งมา","ผักแต่ละอย่างชอบฤดูไม่เหมือนกันนะ ดูดีๆ ก่อนซื้อ","ตาเธอเคยซื้อเมล็ดกับป้าทุกอาทิตย์เลย","ร้านป้าเปิดตั้งแต่เช้ายันเย็นนะจ๊ะ"],
+      ["{n}ขยันจริงนะ ป้าเห็นไฟเปิดตั้งแต่ตีห้า","ได้ข่าวว่าช่างเอกแอบชอบใครบางคนอยู่นะ อย่าบอกใครล่ะ","ใส่ปุ๋ยแล้วผักจะออกดาว ขายได้ราคาดีขึ้น","ป้าเก็บเมล็ดคัดพิเศษไว้ให้ลูกค้าประจำนะ","ฝนกับมิ้นท์สนิทกันมากเลยนะ ป้าเห็นเดินด้วยกันบ่อย","ป้าชอบดอกมะลิ หอมทั้งร้านเลย"],
+      ["ป้ารักเธอเหมือนลูกหลานคนหนึ่งเลยนะ","เห็น{farm}งามขึ้นทุกวัน ป้าก็ภูมิใจไปด้วย","ขาดเหลืออะไรมาบอกป้า ไม่ต้องเกรงใจ","ตาเธอคงยิ้มอยู่บนฟ้าแน่ๆ","วันนี้กินข้าวหรือยัง อย่าทำงานจนลืมกินนะ","มีอะไรอยากเล่าให้ป้าฟังก็มาได้ตลอดนะจ๊ะ"]],
+    s:[["หน้าร้อนแตงโมขายดีที่สุดจ้ะ","แดดแรงรดน้ำเช้าๆ นะ ผักจะได้ไม่เฉา","ข้าวโพดหน้าร้อนก็ปลูกได้นะจ๊ะ"],["หน้าฝนข้าวหอมมะลิงามที่สุดจ้ะ","ฝนตกบ่อยไม่ต้องรดน้ำ ประหยัดแรงดี","ฟักทองชอบหน้าฝนนะจ๊ะ"],["หน้าหนาวลองปลูกสตรอว์เบอร์รีสิ ขายดีมาก","กะหล่ำปลีหน้าหนาวหวานกรอบ","ผักนอกฤดูจะเหี่ยวนะ ระวังด้วย"]],
+    rain:["ฝนตกแบบนี้ลูกค้าน้อย ป้าเลยนั่งคัดเมล็ด","เข้ามาหลบฝนในร้านก่อนสิจ๊ะ"],night:["ป้าจะปิดร้านแล้วจ้ะ พรุ่งนี้มาใหม่นะ","ดึกแล้วรีบกลับบ้านนะจ๊ะ"],morn:["เช้านี้อากาศดีนะจ๊ะ"]},
+  ek:{t:[["ไม้สักดีๆ หายากขึ้นทุกปี","บ้านตาเธอ ช่างเป็นคนซ่อมหลังคาให้เมื่อหลายปีก่อน","จะสร้างอะไรต้องมีไม้กับหินนะ ช่างเสกไม่ได้","เสียงค้อนนี่แหละเพลงโปรดของช่าง"],
+      ["{n}ผ่าไม้เก่งขึ้นแล้วนี่ ดูจากกองไม้หน้าไร่","อยากให้หมู่บ้านมีสะพานดีๆ สักอัน ช่างรอจังหวะอยู่","โรงเรือนกระจกสร้างยากแต่คุ้มนะ ปลูกได้ทุกฤดู","ช่างชอบกาแฟดำ ไม่ใส่น้ำตาล","หินจากเหมืองแข็งดี เอามาทำฐานบ้านได้","บางวันช่างหยุดไปหาไม้ในป่า"],
+      ["ช่างไม่ค่อยพูด แต่ดีใจนะที่มีเธอเป็นเพื่อน","ไร่ของเธอเป็นงานที่ช่างภูมิใจที่สุดแล้ว","ถ้าวันไหนบ้านเธอมีอะไรพัง เรียกช่างได้ทันที","ช่างเก็บไม้สักแผ่นสวยไว้ เผื่อเธออยากได้อะไรพิเศษ","เธอทำให้ช่างอยากสร้างของสวยๆ อีกครั้ง","ขอบใจที่เชื่อฝีมือช่างนะ"]],
+    s:[["แดดแรงๆ ไม้แห้งเร็ว ทำงานได้ไว","หน้าร้อนปลวกเยอะ ระวังกองไม้ด้วย","ร้อนแบบนี้ช่างทำงานแต่เช้า"],["หน้าฝนไม้ชื้น ต้องตากให้แห้งก่อน","หลังคาบ้านเธอรั่วไหม มีอะไรบอกนะ","ฝนตกบ่อย พายุอาจพัดกิ่งไม้มาที่ไร่"],["หน้าหนาวเหมาะสร้างบ้านที่สุด ไม่ร้อนไม่เปียก","ลมหนาวแห้ง ไม้ไม่บิด","ช่างกำลังทำของขวัญปีใหม่ให้หลานยายสาย"]],
+    rain:["ฝนตกแบบนี้ทำงานกลางแจ้งไม่ได้ เลยมาขัดไม้","อย่าลืมคลุมกองไม้ด้วยนะ"],night:["ช่างเก็บเครื่องมือแล้ว พรุ่งนี้ค่อยว่ากัน","ดึกแล้ว รีบกลับไปพักเถอะ"],morn:["เช้าแล้ว งานรออยู่เพียบ"]},
+  nun:{t:[["สวัสดีค่ะ ฉันสอนเด็กๆ ทุกชั้นในโรงเรียนเล็กๆ นี่","เด็กๆ อยากไปทัศนศึกษาที่ไร่ของคุณสักวัน","การปลูกผักเป็นบทเรียนที่ดีที่สุดเลยค่ะ","ห้องสมุดโรงเรียนมีหนังสือเกษตรเยอะ ยืมได้นะคะ"],
+      ["{n}เคยสอนหนังสือไหมคะ ดูเป็นคนอธิบายเก่ง","เด็กๆ วาดรูปไก่ในไร่ของคุณมาส่งการบ้านด้วย","ครูชอบอ่านหนังสือใต้ต้นไม้ตอนเย็นๆ","ภูมิเล่นพิณให้เด็กๆ ฟังทุกวันศุกร์ค่ะ","การบ้านของเด็กเยอะกว่าของครูอีก ฮ่าๆ","เมื่อวานนักเรียนถามว่าทำไมฟ้าสีฟ้า ฉันตอบไม่ทันเลย"],
+      ["อยู่กับ{n}แล้วไม่ต้องเป็นครูก็ได้ สบายใจดี","ฉันเขียนบันทึกทุกวัน ช่วงนี้มีชื่อ{n}บ่อยเลยค่ะ","ขอบคุณที่ฟังเรื่องเด็กๆ ของฉันทุกวันนะคะ","ถ้าวันหนึ่งมีลูก อยากให้เขาโตที่หมู่บ้านนี้","{farm}เป็นห้องเรียนที่สวยที่สุดในหมู่บ้านเลย","วันหยุดไปวัดด้วยกันไหมคะ"]],
+    s:[["ปิดเทอมหน้าร้อน เด็กๆ ไปช่วยพ่อแม่ทำไร่","แดดแรง ครูให้เด็กเรียนในห้องค่ะ","สงกรานต์เด็กๆ ตื่นเต้นมากเลย"],["หน้าฝนเด็กๆ ชอบวิ่งเล่นน้ำ ครูห้ามไม่ไหว","สอนเรื่องวัฏจักรน้ำ ฝนตกพอดีเลยค่ะ","ทางมาโรงเรียนเป็นโคลน ระวังลื่นนะคะ"],["หน้าหนาวเด็กๆ ใส่เสื้อกันหนาวตัวโต น่ารักมาก","ใกล้ลอยกระทงแล้ว เด็กๆ กำลังพับกระทง","อากาศเย็นแบบนี้อ่านหนังสือเพลินดี"]],
+    rain:["ฝนตก เด็กๆ เลยได้ฟังนิทานแทนวิชาพละ","ระวังเป็นหวัดนะคะ"],night:["ตรวจการบ้านยังไม่เสร็จเลยค่ะ","ดึกแล้ว พักผ่อนเยอะๆ นะคะ"],morn:["อรุณสวัสดิ์ค่ะ เด็กๆ กำลังเข้าแถว"]},
+  ton:{t:[["ผมประจำอนามัยตำบล ไม่สบายมาหาได้นะครับ","ทำงานกลางแดดต้องใส่หมวกนะครับ","ยายสายมาตรวจความดันทุกอาทิตย์ แข็งแรงกว่าผมอีก","ผมย้ายมาจากในเมืองเหมือนกันครับ"],
+      ["{n}นอนพอไหมครับ ดูตาคล้ำๆ","อาหารที่ทำเองจากไร่ ดีต่อสุขภาพที่สุดครับ","ผมชอบวิ่งตอนเช้ารอบหมู่บ้าน ลองไปด้วยกันไหม","เห็ดในป่าบางชนิดมีพิษ เก็บแต่ที่รู้จักนะครับ","ลุงมีดื่มน้ำน้อยไป ผมเตือนทุกวันเลย","เวรดึกบ่อยๆ ก็เหนื่อยเหมือนกันครับ"],
+      ["อยู่กับ{n}แล้วผมลืมเหนื่อยไปเลย","ดูแลตัวเองด้วยนะครับ ผมเป็นห่วง","ผมเลือกมาอยู่ที่นี่ไม่ผิดจริงๆ","วันหยุดไปนั่งดูพระอาทิตย์ตกที่บ่อกันไหมครับ","{n}ทำให้หมู่บ้านนี้อบอุ่นขึ้นเยอะเลย","ถ้าเจ็บตรงไหนบอกผมก่อนใครนะครับ"]],
+    s:[["หน้าร้อนระวังลมแดดนะครับ ดื่มน้ำบ่อยๆ","อากาศร้อนแบบนี้คนเป็นหวัดน้อย ผมเลยว่าง","ทากันแดดด้วยนะครับ"],["หน้าฝนยุงเยอะ ระวังไข้เลือดออกครับ","ฝนตกบ่อยคนเป็นหวัดเยอะ ผมยุ่งทั้งวัน","อย่าเดินลุยน้ำนานๆ นะครับ"],["หน้าหนาวอากาศแห้ง ดื่มน้ำอุ่นนะครับ","ช่วงนี้คนไอกันเยอะ ใส่เสื้อหนาๆ","ยายสายบ่นปวดเข่าทุกหน้าหนาว"]],
+    rain:["ฝนตกแบบนี้กลับไปเปลี่ยนเสื้อด้วยนะครับ","เปียกแบบนี้ระวังไม่สบายนะ"],night:["ผมเข้าเวรดึกคืนนี้ครับ","ดึกแล้วนอนได้แล้วครับ คำสั่งหมอ"],morn:["เช้านี้วิ่งมาแล้วสองรอบหมู่บ้านครับ"]},
+  phum:{t:[["ผมเล่นพิณทุกเย็นที่ลาน แวะมาฟังได้","เพลงหมอลำเก่าๆ ไพเราะกว่าเพลงใหม่เยอะนะ","ลมพัดใบไม้ก็เป็นจังหวะได้ ลองฟังสิ","ผมแต่งเพลงไม่เป็นหรอก แค่เล่นตามใจ"],
+      ["{n}ร้องเพลงเป็นไหม มาร้องด้วยกันสิ","ผมกำลังแต่งเพลงเกี่ยวกับทุ่งนา ยังไม่มีท่อนจบ","ปู่สอนว่าเล่นพิณต้องเล่นด้วยใจ ไม่ใช่นิ้ว","เสียงวัวร้องตอนเช้าที่ไร่คุณ ผมเอาไปใส่เพลงแล้วนะ","งานบุญบั้งไฟปีนี้ผมจะเล่นบนเวที","ครูนุ่นชวนผมไปสอนดนตรีเด็กๆ ทุกวันศุกร์"],
+      ["เพลงที่ผมแต่งใหม่ ได้แรงบันดาลใจจาก{n}นะ","เล่นพิณให้{n}ฟังคนเดียว พิเศษกว่าเล่นบนเวทีอีก","ผมว่าเราสองคนเข้ากันดีเหมือนพิณกับแคน","ตั้งชื่อเพลงใหม่ว่า '{farm}' ดีไหม","วันไหนเหงาๆ มาฟังผมเล่นได้นะ","ขอบคุณที่ฟังเพลงผมทุกวัน"]],
+    s:[["ร้อนแบบนี้สายพิณยืด เสียงเพี้ยนหมด","หน้าร้อนเล่นใต้ต้นไม้สบายสุด","สงกรานต์ผมจะเล่นเพลงสาดน้ำ"],["เสียงฝนตกบนหลังคาสังกะสี เพราะกว่าทุกเพลง","หน้าฝนพิณชื้น ต้องเช็ดทุกวัน","ฝนตกแบบนี้แต่งเพลงเศร้าได้ดี"],["หน้าหนาวเล่นพิณข้างกองไฟ ฟินที่สุด","ลมหนาวพัดมา เสียงพิณใสขึ้น","ลอยกระทงปีนี้ผมจะเล่นเพลงริมบ่อ"]],
+    rain:["ฝนตก วันนี้เล่นในบ้านแทน","มาหลบฝนฟังเพลงด้วยกันไหม"],night:["กลางคืนเล่นพิณเบาๆ กล่อมตัวเองนอน","ดาวคืนนี้สวยนะ"],morn:["เช้านี้ยังไม่ได้ซ้อมเลย ง่วง"]},
+  sai:{t:[["ยายรู้จักตาของหลานตั้งแต่ยังหนุ่มๆ","มาเยี่ยมยายบ่อยๆ นะหลาน","สวนดอกไม้ของยายมีดอกมะลิทั้งปีเลย","อย่าทำงานหนักเกินไปนะ เดี๋ยวก็ป่วย"],
+      ["{n}ทำงานเหมือนตาไม่มีผิด ขยันตั้งแต่เช้ามืด","ตาเขาชอบนั่งเป่าขลุ่ยหน้าบ้านตอนเย็นๆ","ยายเคยทำแกงหน่อไม้ให้ตาเขากินทุกหน้าฝน","หมอต้นมาตรวจยายทุกอาทิตย์ ใจดีจริงๆ","ดอกไม้สวยต้องรดน้ำด้วยใจนะหลาน","สมัยก่อนหมู่บ้านนี้มีงานวัดทุกเดือนเลย"],
+      ["ยายดีใจที่สุดที่หลานมาอยู่ที่นี่","ไร่ของตากลับมามีชีวิตเพราะหลานนะ","ยายแก่แล้ว แต่ยังอยากเห็นหลานมีครอบครัวที่อบอุ่น","ตาเขาคงภูมิใจในตัวหลานมากๆ","มีเรื่องไม่สบายใจมาเล่าให้ยายฟังได้นะ","ยายฝันถึงตาเมื่อคืน เขายิ้มให้ยายด้วย"]],
+    s:[["หน้าร้อนดอกดาวเรืองบานเต็มสวนเลย","ร้อนแบบนี้ยายนั่งพัดอยู่ใต้ต้นมะม่วง","สงกรานต์ปีนี้มารดน้ำดำหัวยายด้วยนะ"],["หน้าฝนหน่อไม้ขึ้นเต็มป่าเลยหลาน","ฝนตกบ่อยยายปวดเข่า แต่ไม่เป็นไรหรอก","ข้าวในนาเขียวสวยทุกหน้าฝน"],["หน้าหนาวดอกไม้ในสวนยายบานสวยที่สุด","ลมหนาวมาแล้ว ใส่เสื้อหนาๆ นะหลาน","ปีใหม่นี้ยายจะทำขนมให้นะ"]],
+    rain:["ฝนตก อย่าตากฝนนะหลาน","นั่งฟังเสียงฝนกับยายก่อนไหม"],night:["ยายนอนเร็ว หลานก็อย่านอนดึกนะ","ดึกแล้วกลับบ้านดีๆ นะหลาน"],morn:["ยายตื่นมาสวดมนต์ตั้งแต่ตีห้าแล้ว"]},
+  mint:{t:[["ในป่ามีนกเงือกด้วยนะ ฉันเห็นเมื่อเดือนก่อน","อย่าเก็บเห็ดที่ไม่รู้จักนะ อันตราย","ฉันเดินป่ามาตั้งแต่เด็ก ไม่เคยเบื่อเลย","รองเท้าคู่นี้เดินมาแล้วสามภูเขา!"],
+      ["{n}ไปเดินป่าด้วยกันไหม ฉันรู้ทางลัด","เมื่อวานเจอรอยหมูป่าแถวทุ่งริมลำธาร","น้ำตกบนเขาสวยที่สุดตอนเช้า ไม่มีคน","ฉันจดชื่อนกที่เจอในสมุด ได้สามสิบชนิดแล้ว","กล้วยไม้ป่าห้ามเด็ดเยอะนะ เดี๋ยวหมดป่า","ครูนุ่นชวนฉันไปสอนเด็กเรื่องป่า สนุกมาก"],
+      ["เดินป่าคนเดียวก็สนุก แต่เดินกับ{n}สนุกกว่า","ฉันเจอที่ลับดูพระอาทิตย์ตก จะพา{n}ไปคนเดียว","{n}เป็นคนแรกที่ทนฟังฉันเล่าเรื่องนกได้นานขนาดนี้","อยากให้{farm}มีต้นไม้เยอะๆ นกจะได้มาอยู่","ขอบคุณที่เป็นเพื่อนผจญภัยนะ","ถ้าวันหนึ่งฉันไปเดินป่าไกลๆ จะคิดถึง{n}นะ"]],
+    s:[["หน้าร้อนป่าแห้ง ระวังไฟป่าด้วย","ร้อนแบบนี้ไปเล่นน้ำตกกันดีกว่า","ผักหวานป่าออกหน้าร้อน อร่อยมาก"],["หน้าฝนทากเยอะ ใส่ถุงเท้ากันทากด้วย","เห็ดโคนออกหน้าฝน ไปหากันไหม","น้ำตกหน้าฝนแรงมาก ตื่นเต้นสุดๆ"],["หน้าหนาวทะเลหมอกสวยที่สุด","มะขามป่าหล่นเต็มป่าเลย","นกอพยพมาหน้าหนาว ฉันตื่นเต้นทุกปี"]],
+    rain:["ฝนตกแบบนี้ป่าหอมกลิ่นดินมาก","วันนี้ไม่ได้ขึ้นเขา ฝนหนัก"],night:["กลางคืนในป่าได้ยินเสียงกบเต็มเลย","ฉันชอบนอนดูดาว"],morn:["เช้านี้ฉันขึ้นเขามาแล้วหนึ่งรอบ!"]},
+  ja:{t:[["ร้านจ๋ามีแกงใหม่ทุกวัน แวะมาชิมนะ","ผักสดจากไร่คุณทำแกงอร่อยกว่าผักตลาดอีก","จ๋ามาจากในเมือง แต่ชอบที่นี่มากกว่า","ทำอาหารคือความสุขของจ๋า"],
+      ["{n}กินเผ็ดได้ไหม แกงเขียวหวานวันนี้เผ็ดจัด","ลุงมีมากินข้าวร้านจ๋าทุกเที่ยงเลย","อยากได้กะเพราสดๆ อีก ไร่คุณปลูกไหม","ถ้าร้านได้ดาวครบห้า จ๋าจะขยายร้าน","ขอบคุณที่ส่งวัตถุดิบให้นะ ลูกค้าชมทุกคน","ป้าแดงชอบสั่งข้าวผัดไม่ใส่ต้นหอม"],
+      ["จ๋าทำเมนูพิเศษไว้ให้{n}คนเดียวนะ","เวลาเหนื่อยๆ เห็นหน้า{n}แล้วหายเหนื่อยเลย","อยากตั้งชื่อเมนูใหม่ว่า 'ข้าวแกง{farm}'","จ๋าอยากทำอาหารให้{n}กินไปนานๆ","ร้านจ๋าอยู่ได้เพราะ{n}ช่วยเยอะเลย","คืนนี้ปิดร้านแล้วมานั่งกินด้วยกันไหม"]],
+    s:[["หน้าร้อนขายน้ำแข็งใสดีกว่าแกงอีก","ร้อนแบบนี้ยืนหน้าเตาทั้งวันแทบละลาย","มะม่วงหน้าร้อนเอามาทำข้าวเหนียวมะม่วงขายดีมาก"],["หน้าฝนต้มยำขายดีที่สุด","ฝนตกลูกค้ามานั่งหลบฝนกันเต็มร้าน","หน่อไม้หน้าฝนเอามาแกงอร่อยมาก"],["หน้าหนาวแกงร้อนๆ หมดเร็วมาก","อากาศเย็นแบบนี้กินข้าวต้มอร่อยที่สุด","ฟักทองหน้าหนาวทำแกงบวดหวานๆ"]],
+    rain:["ฝนตกแบบนี้ลูกค้าเยอะ จ๋ายุ่งมาก","มากินอะไรร้อนๆ ที่ร้านสิ"],night:["เก็บร้านเสร็จแล้ว เหนื่อยแต่สนุก","ร้านปิดแล้ว พรุ่งนี้มาใหม่นะ"],morn:["เช้านี้ตลาดสดมาก ได้ผักดีๆ เพียบ"]}
+};
+const NEWS=[
+  {id:'buek',ok:()=>S.col.buek>0,l:'ได้ข่าวว่า{n}ตกปลาบึกได้ด้วย เก่งมาก!',o:{mee:'ได้ข่าวว่าเอ็งตกปลาบึกได้! ลุงตกมาสามสิบปียังไม่เคยได้เลย'}},
+  {id:'land',ok:()=>!!S.land,l:'ซื้อที่ดินหลังไร่แล้วเหรอ ไร่ใหญ่ขึ้นเยอะเลย',o:{daeng:'ไร่ใหญ่ขึ้นแล้ว ต้องซื้อเมล็ดเพิ่มแล้วล่ะจ้ะ'}},
+  {id:'bridge',ok:()=>!!(S.proj.bridge&&S.proj.bridge.done),l:'สะพานซ่อมเสร็จแล้ว เดินไปทุ่งริมลำธารสะดวกขึ้นเยอะเลย',o:{ek:'สะพานที่เราช่วยกันซ่อม แข็งแรงมาก ช่างภูมิใจ',mint:'ขอบคุณที่ซ่อมสะพานนะ ฉันได้ย้ายมาอยู่ริมลำธารแล้ว'}},
+  {id:'market',ok:()=>!!(S.proj.market&&S.proj.market.done),l:'ตลาดคึกคักขึ้นมากตั้งแต่{n}ช่วยฟื้น',o:{daeng:'ตลาดกลับมาแล้ว ร้านป้าขายดีขึ้นเยอะเลยจ้ะ',ja:'ถ้าไม่มี{n} จ๋าคงไม่ได้มาเปิดร้านที่นี่'}},
+  {id:'temple',ok:()=>!!(S.proj.temple&&S.proj.temple.done),l:'วัดเก่าสวยเหมือนเดิมแล้ว ไปไหว้พระกันนะ',o:{sai:'วัดกลับมาสวยเหมือนสมัยยายยังสาว ยายดีใจจนน้ำตาไหล'}},
+  {id:'gh',ok:()=>!!S.built.gh,l:'โรงเรือนกระจกที่ไร่สวยมาก ปลูกได้ทุกฤดูเลยใช่ไหม',o:{ek:'โรงเรือนหลังนั้นช่างตั้งใจทำที่สุดในชีวิตเลยนะ'}},
+  {id:'wed',ok:()=>!!S.rel.spouse,skipSp:true,l:'ยินดีด้วยนะที่แต่งงานกับ{sp}',o:{sai:'ยายเห็นหลานแต่งงานแล้ว ยายหมดห่วงแล้วล่ะ',daeng:'ยินดีด้วยนะจ๊ะ ป้าร้องไห้ตั้งแต่ในงานเลย'}},
+  {id:'kid',ok:()=>!!S.rel.kid,skipSp:true,l:'{kid}น่ารักมาก โตเร็วจังเลย',o:{ton:'{kid}แข็งแรงดี ผมตรวจแล้วครับ'}},
+  {id:'mine10',ok:()=>(S.mineDeep||0)>=10,l:'ได้ยินว่าลงเหมืองไปถึงชั้นสิบแล้ว ระวังตัวด้วยนะ',o:{ton:'ลงเหมืองลึกๆ ระวังบาดเจ็บนะครับ มีอะไรมาหาผม',ek:'แร่จากเหมืองชั้นลึกเอามาตีเครื่องมือได้ดีนะ'}},
+  {id:'beach',ok:()=>((S.trips||{}).beach||0)>0,l:'ไปเที่ยวทะเลมาเหรอ ผิวคล้ำขึ้นนะ',o:{ja:'ไปทะเลมาเหรอ เอาปลาหมึกมาฝากจ๋าบ้างสิ'}},
+  {id:'falls',ok:()=>((S.trips||{}).falls||0)>0,l:'ไปน้ำตกบนเขามาแล้วเหรอ สวยใช่ไหม',o:{mint:'ไปน้ำตกมาแล้ว! เห็นนกเงือกไหม'}},
+  {id:'pet',ok:()=>!!S.pet,l:'{pet}น่ารักจัง เลี้ยงดีนะ',o:{mint:'{pet}ชอบวิ่งตามผีเสื้อในทุ่ง ฉันเห็นบ่อยเลย'}},
+  {id:'horse',ok:()=>!!S.horse,l:'ขี่ม้ามาเท่มากเลยนะ'},
+  {id:'rich',ok:()=>(S.stats.earned||0)>=20000,l:'ได้ยินว่า{farm}ขายผักได้ดีมาก ดังไปถึงในเมืองแล้ว'},
+  {id:'museum',ok:()=>Object.keys(S.museum||{}).length>=5,l:'ไปดูพิพิธภัณฑ์มาแล้ว ของที่{n}บริจาคสวยมาก',o:{nun:'พาเด็กๆ ไปดูพิพิธภัณฑ์ ทุกคนตื่นเต้นมากค่ะ'}}
+];
+const SP_LINES=['วันนี้ฉันช่วยดูไร่ให้แล้วนะ','กลับบ้านเร็วๆ นะ จะทำกับข้าวรอ','มีเธออยู่ด้วย ทุกวันก็ดีหมด','เมื่อคืนเธอละเมอพูดถึงแตงโมด้วยนะ','อย่าทำงานหนักจนลืมพักนะ','วันนี้อยากกินอะไร เดี๋ยวทำให้','ขอบคุณที่ดูแลครอบครัวเรานะ','เย็นนี้ไปนั่งริมบ่อด้วยกันไหม'];
+function talkFill(t){return t.replace(/\{n\}/g,pn()).replace(/\{farm\}/g,S.farm||'ไร่สุขใจ').replace(/\{sp\}/g,S.rel.spouse?NPCS[S.rel.spouse].n:'').replace(/\{kid\}/g,S.rel.kid?S.rel.kid.name:'').replace(/\{pet\}/g,S.pet?S.pet.name:'');}
+function talkLine(id,tier){const n=S.npc[id],d=NPCS[id],T=TALK[id]||{t:[[],[],[]],s:[[],[],[]]};
+  if(n.lineDay===S.day&&n.line)return n.line;
+  let line=null;n.heard=n.heard||{};
+  for(const N of NEWS){if(n.heard[N.id]||!N.ok()||(N.skipSp&&S.rel.spouse===id))continue;n.heard[N.id]=S.day;line=(N.o&&N.o[id])||N.l;break;}
+  const r=k=>hash(S.day*7+k,id.length*13+id.charCodeAt(0));
+  if(!line){const nf=festOn(S.day+1);if(nf&&r(1)<.4)line=`พรุ่งนี้มีงาน${nf.n}นะ อย่าลืมมาล่ะ`;}
+  if(!line&&S.rain&&T.rain&&r(2)<.5)line=T.rain[Math.floor(r(3)*T.rain.length)];
+  if(!line&&(S.t>=1080)&&T.night&&r(4)<.35)line=T.night[Math.floor(r(5)*T.night.length)];
+  if(!line&&S.t<540&&T.morn&&r(6)<.25)line=T.morn[Math.floor(r(7)*T.morn.length)];
+  if(!line){const pool=[...(T.t[tier]||[]),...(d.lines[tier]||[]),...((T.s&&T.s[seasonIdx()])||[])];if(tier>0)pool.push(...(T.t[tier-1]||[]).slice(0,2));
+    if(GREET[id]&&tier===0)pool.push('@greet');
+    const cand=pool.filter(x=>talkFill(x)!==n.line);line=cand[Math.floor(r(8)*cand.length)]||pool[0];
+    if(line==='@greet')line=GREET[id](pn());}
+  line=talkFill(line);n.line=line;n.lineDay=S.day;return line;}
+
 function openNpc(id,reply,emo){
   if(!reply&&id==='sai'&&S.evalDue){S.npc.sai.talked=true;openEval();return;}
   if(!reply&&S.rel.spouse===id&&S.rel.fight){S.npc[id].talked=true;openMakeup(id);return;}
@@ -1737,9 +1839,7 @@ function openNpc(id,reply,emo){
   if(!reply&&tid&&n.h>=4&&!S.known.includes(tid)){S.known.push(tid);teach=`เราสนิทกันแล้ว สอนสูตร${ITEMS[tid].n}ให้เลย ${inName(DISHES[tid].in)} ทำที่ครัวในบ้านนะ`;sfx('upgrade');}
   const spouse=S.rel.spouse===id;
   const bday=isBday(id)?(n.gifted?'ขอบคุณสำหรับของขวัญวันเกิดนะ ดีใจมาก':'วันนี้วันเกิดฉันเอง!'):'';
-  const spLines=['วันนี้ฉันช่วยดูไร่ให้แล้วนะ','กลับบ้านเร็วๆ นะ จะทำกับข้าวรอ','มีเธออยู่ด้วย ทุกวันก็ดีหมด'];
-  const greet=S.pname&&GREET[id]&&(S.day+id.length)%3===0?GREET[id](pn()):'';
-  const line=teach||reply||bday||(f&&FEST_LINES[f.id]&&FEST_LINES[f.id][id])||(spouse?spLines[S.day%3]:greet||d.lines[tier][(S.day+id.length)%d.lines[tier].length]);
+  const line=teach||reply||bday||(f&&FEST_LINES[f.id]&&FEST_LINES[f.id][id])||(spouse&&S.day%2?SP_LINES[(S.day>>1)%SP_LINES.length]:talkLine(id,tier));
   const cap=capH(id),hearts='♥'.repeat(n.h)+'♡'.repeat(cap-n.h)+(cap<10?' (สูงสุด 8 จนกว่าจะคบกัน)':'');
   let love='';
   if(d.cand&&!S.rel.spouse){
@@ -1767,11 +1867,14 @@ function openNpc(id,reply,emo){
     <div class="hearts" aria-label="ความสนิท ${n.h} จาก ${cap}">${hearts}</div>
     ${spouse?`<div class="lv">คู่ชีวิตของคุณ · ${moodTxt(S.rel.mood)}${isAnniv()?' · วันนี้ครบรอบแต่งงาน':''}</div>`:S.rel.date===id?'<div class="lv">แฟนของคุณ</div>':''}
     <div class="talk">${face(id,em)}<p class="quote">“${line}”</p></div>${storyRice}${love}${kid}${hike}${dateBtn}${req}${gifts}
-    <div class="row">${id==='daeng'&&!festActive()?'<button class="btn ghost" data-shop>กลับไปที่ร้าน</button>':''}${id==='ek'&&!festActive()?'<button class="btn ghost" data-carp>กลับไปที่โรงไม้</button>':''}<button class="btn ghost" data-close>บอกลา</button></div>`);
+    <div class="row">${id==='daeng'&&!festActive()?'<button class="btn" data-shop>เปิดร้าน ดูสินค้า</button>':''}${id==='ek'&&!festActive()?'<button class="btn" data-carp>เปิดโรงไม้ ดูของ</button>':''}<button class="btn ghost" data-close>บอกลา</button></div>`);
 }
 const seedPrice=k=>Math.round(CROPS[k].buy*(inSeason(k)?1:1.5));
+
+const MTAB={shop:'seed',carp:'build',book:'veg'};
+function mtabs(k,list){return`<div class="tabs mtabs">${list.map(([id,n])=>`<button type="button" class="tab ${MTAB[k]===id?'on':''}" data-mtab="${k}:${id}">${n}</button>`).join('')}</div>`;}
 function openShop(){
-  let rows='';for(const k in CROPS){const ins=inSeason(k);if(!ins&&!S.built.gh)continue;const c=CROPS[k],pr=seedPrice(k);
+  let rows='',arows='';const ST=MTAB.shop;for(const k in CROPS){const ins=inSeason(k);if(!ins&&!S.built.gh)continue;const c=CROPS[k],pr=seedPrice(k);
     rows+=`<tr><td>${ic(k)}<b>${c.n}</b>${ins?'':'<div class="lv">นอกฤดู · ปลูกในโรงเรือน</div>'}</td><td>${c.d} วัน</td><td>฿${pr}</td><td>฿${ITEMS[k].v}</td><td>${S.seeds[k]}</td>
     <td><button class="btn" data-buy="${k}:1" ${S.money<pr?'disabled':''}>+1</button> <button class="btn" data-buy="${k}:5" ${S.money<pr*5?'disabled':''}>+5</button></td></tr>`;}
   const anyEight=Object.keys(NPCS).some(id=>NPCS[id].cand&&S.npc[id].h>=8);
@@ -1779,18 +1882,19 @@ function openShop(){
   if(!S.rel.spouse&&S.rel.date&&!S.rel.wedDay)rows+=`<tr><td><b>แหวนทอง</b><div class="lv">มอบเพื่อขอแต่งงาน</div></td><td>—</td><td>฿${RING_PRICE}</td><td>—</td><td>${S.inv.ring}</td><td><button class="btn" data-special="ring" ${S.money<RING_PRICE?'disabled':''}>ซื้อ</button></td></tr>`;
   for(const k in FTREES){const F=FTREES[k],dk='tr_'+k;rows+=`<tr><td>${ic(k)}<b>ต้นกล้า${F.n}</b><div class="lv">ไม้ผล · ออกผลทุก ${F.every} วัน${F.s.length<3?` (${F.s.map(i=>SEASONS[i].n).join(' ')})`:''}</div></td><td>${F.grow} วัน</td><td>฿${F.price}</td><td>฿${ITEMS[k].v}</td><td>${S.decoInv[dk]||0}</td>
     <td><button class="btn" data-sap="${k}" ${S.money<F.price?'disabled':''}>+1</button></td></tr>`;}
-  rows+=`<tr><td>${ic('med')}<b>ยารักษาสัตว์</b><div class="lv">ให้สัตว์ที่ป่วย</div></td><td>—</td><td>฿${MED_PRICE}</td><td>—</td><td>${S.inv.med||0}</td><td><button class="btn" data-special="med" ${S.money<MED_PRICE?'disabled':''}>+1</button></td></tr>`;
-  if(!S.inv.brush)rows+=`<tr><td>${ic('brush')}<b>แปรงขนสัตว์</b><div class="lv">แปรงวัว แพะ ควายหลังลูบหัว สนิทเร็วขึ้น</div></td><td>—</td><td>฿${BRUSH_PRICE}</td><td>—</td><td>—</td><td><button class="btn" data-special="brush" ${S.money<BRUSH_PRICE?'disabled':''}>ซื้อ</button></td></tr>`;
+  arows+=`<tr><td>${ic('med')}<b>ยารักษาสัตว์</b><div class="lv">ให้สัตว์ที่ป่วย</div></td><td>—</td><td>฿${MED_PRICE}</td><td>—</td><td>${S.inv.med||0}</td><td><button class="btn" data-special="med" ${S.money<MED_PRICE?'disabled':''}>+1</button></td></tr>`;
+  if(!S.inv.brush)arows+=`<tr><td>${ic('brush')}<b>แปรงขนสัตว์</b><div class="lv">แปรงวัว แพะ ควายหลังลูบหัว สนิทเร็วขึ้น</div></td><td>—</td><td>฿${BRUSH_PRICE}</td><td>—</td><td>—</td><td><button class="btn" data-special="brush" ${S.money<BRUSH_PRICE?'disabled':''}>ซื้อ</button></td></tr>`;
   rows+=`<tr><td>${ic('hay')}<b>หญ้าแห้ง</b></td><td>อาหารวัว</td><td>฿${HAY_PRICE}</td><td>—</td><td>${S.hay}</td>
     <td><button class="btn" data-buy="hay:1" ${S.money<HAY_PRICE?'disabled':''}>+1</button> <button class="btn" data-buy="hay:5" ${S.money<HAY_PRICE*5?'disabled':''}>+5</button></td></tr>`;
   let tools='';for(const t in TOOLS){const T=TOOLS[t],lv=S.tools[t];
     tools+=`<tr><td><b>${T.n[lv]}</b><div class="lv">${toolDesc(t,lv)}</div></td><td colspan="3">${lv<2?`→ ${T.n[lv+1]} (${toolDesc(t,lv+1)})`:'ระดับสูงสุดแล้ว'}</td><td></td>
       <td>${lv<2?`<button class="btn" data-up="${t}" ${S.money<T.cost[lv+1]||S.prod[ORES_FOR[lv+1].k]<ORES_FOR[lv+1].n?'disabled':''}>฿${T.cost[lv+1]} + ${ITEMS[ORES_FOR[lv+1].k].n} ${ORES_FOR[lv+1].n}</button>`:''}</td></tr>`;}
   showModal(`<h2>ร้านเมล็ดพันธุ์ป้าแดง</h2><p>เงินที่มี <b>฿${S.money}</b> · เมล็ด${season().n}</p>
-  <div style="overflow-x:auto"><table class="shop"><tr><th>สินค้า</th><th>โต</th><th>ราคา</th><th>ขายผลได้</th><th>มี</th><th></th></tr>${rows}</table></div>
-  <div class="sub">สัตว์เลี้ยง</div>${Object.keys(ANIMALS).map(k=>{const A=ANIMALS[k],ok=A.need();const nt=typeof A.needTxt==='function'?A.needTxt():A.needTxt;return `<div class="need"><span><b>${A.n}</b> ฿${A.p}${A.cnt?` · ${A.cnt()}`:''}<br><small>${ok?A.d:nt}</small></span><button class="btn" data-animal="${k}" ${!ok||S.money<A.p?'disabled':''}>ซื้อ</button></div>`;}).join('')}
-  <div class="sub">อัปเกรดเครื่องมือ (ใช้แร่จากเหมือง)</div>
+${mtabs('shop',[['seed','เมล็ดและต้นกล้า'],['ani','สัตว์และยา'],['tool','อัปเกรดเครื่องมือ']])}${ST==='seed'?`  <div style="overflow-x:auto"><table class="shop"><tr><th>สินค้า</th><th>โต</th><th>ราคา</th><th>ขายผลได้</th><th>มี</th><th></th></tr>${rows}</table></div>
+`:''}${ST==='ani'?`<div class="sub">สัตว์เลี้ยง</div>${Object.keys(ANIMALS).map(k=>{const A=ANIMALS[k],ok=A.need();const nt=typeof A.needTxt==='function'?A.needTxt():A.needTxt;return `<div class="need"><span><b>${A.n}</b> ฿${A.p}${A.cnt?` · ${A.cnt()}`:''}<br><small>${ok?A.d:nt}</small></span><button class="btn" data-animal="${k}" ${!ok||S.money<A.p?'disabled':''}>ซื้อ</button></div>`;}).join('')}
+${arows?`<div class="sub">ยาและอุปกรณ์</div><div style="overflow-x:auto"><table class="shop">${arows}</table></div>`:''}`:''}${ST==='tool'?`  <div class="sub">อัปเกรดเครื่องมือ (ใช้แร่จากเหมือง)</div>
   <div style="overflow-x:auto"><table class="shop">${tools}</table></div>
+`:''}
   <div class="row">${festActive()?'':'<button class="btn" data-npc="daeng">คุยกับป้าแดง</button>'}<button class="btn ghost" data-close>ปิดร้าน</button></div>`);
 }
 function openLand(){
@@ -1986,11 +2090,13 @@ function openCarpenter(){
       ${done||busy?'':`<button class="btn" data-build="${id}" ${ok?'':'disabled'}>สั่งสร้าง</button>`}</div></div>`;}
   let mats='';for(const k in MATS)mats+=`<div class="need"><span>${MATS[k].n} (มี ${S.mat[k]}) · ฿${MATS[k].p}</span>
     <button class="btn ghost" data-mat="${k}:5" ${S.money<MATS[k].p*5?'disabled':''}>+5</button><button class="btn ghost" data-mat="${k}:10" ${S.money<MATS[k].p*10?'disabled':''}>+10</button></div>`;
+  const FS=furnShop();if(MTAB.carp==='home'&&!FS)MTAB.carp='build';const CT=MTAB.carp;
   showModal(`<h2>โรงไม้ช่างเอก</h2><p>เงิน ฿${S.money} · ไม้ ${S.mat.wood} · หิน ${S.mat.stone}${S.build?' · สร้างได้ทีละหลัง':''}</p>
-    ${rows}${furnShop()}<div class="sub">ซื้อวัสดุ</div>${mats}
-    <div class="sub">ประกอบสปริงเกอร์ · วางบนแปลงดิน รดน้ำให้ทุกเช้า</div>${Object.keys(SPRK).map(k=>{const R=SPRK[k],ok=Object.keys(R.need).every(m=>haveMat(m)>=R.need[m]);
+    ${mtabs('carp',[['build','สร้าง'],...(FS?[['home','เฟอร์นิเจอร์']]:[]),['mat','วัสดุ'],['sprk','สปริงเกอร์'],['deco','ตกแต่ง']])}
+    ${CT==='build'?rows:''}${CT==='home'?FS:''}${CT==='mat'?`<div class="sub">ซื้อวัสดุ</div>${mats}`:''}${CT==='sprk'?`    <div class="sub">ประกอบสปริงเกอร์ · วางบนแปลงดิน รดน้ำให้ทุกเช้า</div>${Object.keys(SPRK).map(k=>{const R=SPRK[k],ok=Object.keys(R.need).every(m=>haveMat(m)>=R.need[m]);
       return `<div class="need"><span>${decoIcon(k)}<b>${R.n}</b> · ${R.r}<br><small>${Object.keys(R.need).map(m=>`${m==='stone'?'หิน':ITEMS[m].n} ${haveMat(m)}/${R.need[m]}`).join(' · ')} · มี ${S.decoInv[k]||0}</small></span><button class="btn" data-craft="${k}" ${ok?'':'disabled'}>ประกอบ</button></div>`;}).join('')}
-    <div class="sub">ของตกแต่งไร่ · ซื้อแล้ววางได้จากกระเป๋า</div>${Object.keys(DECOS).filter(k=>!DECOS[k].craft).map(k=>`<div class="need"><span>${decoIcon(k)}<b>${DECOS[k].n}</b> ฿${DECOS[k].p} · มี ${S.decoInv[k]||0}</span><button class="btn ghost" data-deco="${k}:1" ${S.money<DECOS[k].p?'disabled':''}>+1</button><button class="btn ghost" data-deco="${k}:5" ${S.money<DECOS[k].p*5?'disabled':''}>+5</button></div>`).join('')}
+`:''}${CT==='deco'?`    <div class="sub">ของตกแต่งไร่ · ซื้อแล้ววางได้จากกระเป๋า</div>${Object.keys(DECOS).filter(k=>!DECOS[k].craft).map(k=>`<div class="need"><span>${decoIcon(k)}<b>${DECOS[k].n}</b> ฿${DECOS[k].p} · มี ${S.decoInv[k]||0}</span><button class="btn ghost" data-deco="${k}:1" ${S.money<DECOS[k].p?'disabled':''}>+1</button><button class="btn ghost" data-deco="${k}:5" ${S.money<DECOS[k].p*5?'disabled':''}>+5</button></div>`).join('')}
+`:''}
     <div class="row">${festActive()?'':'<button class="btn" data-npc="ek">คุยกับช่างเอก</button>'}<button class="btn ghost" data-close>ปิด</button></div>`);
 }
 const reqName=k=>k==='money'?'เงิน':MATS[k]?MATS[k].n:ITEMS[k].n;
@@ -2269,14 +2375,18 @@ function drawBerry(X,Y,s){const g=.35+Math.sin(clock*4)*.15;ctx.fillStyle=`rgba(
   [[-.12,-.12],[.12,-.12],[0,.06]].forEach(([dx,dy])=>{ctx.fillStyle='#7a2fb0';ctx.beginPath();ctx.arc(X+dx*s,Y+dy*s-s*.1,s*.13,0,7);ctx.fill();ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(X+dx*s-s*.04,Y+dy*s-s*.15,s*.035,0,7);ctx.fill();});}
 function berryBook(){const B=S.berries||{},n=Object.keys(B).length;
   return`<div class="sub">เบอร์รีพลัง ${n}/${BERRIES.length} · กินแล้วแรงสูงสุด +${BERRY_PLUS} ถาวร</div><div class="book">`+BERRIES.map(b=>B[b.id]?`<div class="got">${icon('berry',30)}<b>${b.n}</b>ได้แล้ว</div>`:`<div><b>???</b><small>${b.hint}</small></div>`).join('')+'</div>';}
+const BOOK_SHORT={veg:'ผัก',veg2:'สวนครัว',animal:'สัตว์',fish:'ปลา',trip:'ทะเล',wild:'ของป่า',mine:'แร่',proc:'แปรรูป',food:'อาหาร'};
 function openBook(){
-  let total=0,got=0,html='';
-  for(const c of COL_CATS){const done=c.keys.every(k=>S.col[k]>0);
-    html+=`<div class="sub">${c.n} (${c.keys.filter(k=>S.col[k]>0).length}/${c.keys.length})</div><div class="book">`+
-      c.keys.map(k=>{total++;const n=S.col[k]||0;if(n)got++;
+  let total=0,got=0;const H={},tabs=[];
+  for(const c of COL_CATS){const done=c.keys.every(k=>S.col[k]>0),g=c.keys.filter(k=>S.col[k]>0).length;total+=c.keys.length;got+=g;
+    tabs.push([c.id,`${BOOK_SHORT[c.id]||c.n} ${g}/${c.keys.length}${done&&!S.colClaim[c.id]?' !':''}`]);
+    H[c.id]=`<div class="sub">${c.n} (${g}/${c.keys.length})</div><div class="book">`+
+      c.keys.map(k=>{const n=S.col[k]||0;
         return n?`<div class="got">${icon(k,30)}<b>${ITEMS[k].n}</b>ได้มา ${n}<br>ขาย ฿${ITEMS[k].v}</div>`:'<div><b>???</b>ยังไม่เคยได้</div>';}).join('')+'</div>'+
       (S.colClaim[c.id]?`<div class="lv">รับรางวัล ฿${c.reward} แล้ว</div>`:`<div class="need"><span>ครบหมวดรับ ฿${c.reward}</span><button class="btn" data-claim="${c.id}" ${done?'':'disabled'}>รับรางวัล</button></div>`);}
-  showModal(`<h2>สมุดสะสม</h2><div class="row" style="margin-top:0"><button class="btn" data-map>แผนที่หมู่บ้าน</button><button class="btn ghost" data-quests>ภารกิจฤดู</button>${unl('museum')?'<button class="btn ghost" data-museum>พิพิธภัณฑ์</button>':''}</div><p>สะสมแล้ว ${got}/${total} อย่าง</p>${relicBook()}${berryBook()}${html}<div class="row"><button class="btn ghost" data-close>ปิด</button></div>`);
+  tabs.push(['sp',`พิเศษ ${Object.keys(S.relics||{}).length+Object.keys(S.berries||{}).length}/${RELICS.length+BERRIES.length}`]);H.sp=relicBook()+berryBook();
+  if(!H[MTAB.book])MTAB.book='veg';
+  showModal(`<h2>สมุดสะสม</h2><div class="row" style="margin-top:0"><button class="btn" data-map>แผนที่หมู่บ้าน</button><button class="btn ghost" data-quests>ภารกิจฤดู</button>${unl('museum')?'<button class="btn ghost" data-museum>พิพิธภัณฑ์</button>':''}</div><p>สะสมแล้ว ${got}/${total} อย่าง</p>${mtabs('book',tabs)}${H[MTAB.book]}<div class="row"><button class="btn ghost" data-close>ปิด</button></div>`);
 }
 $('bookBtn').addEventListener('click',()=>{sfx('ui');openBook();});
 {const mb=$('mapBtn');if(mb)mb.addEventListener('click',()=>{sfx('ui');openMap();});}
@@ -3542,7 +3652,7 @@ function hud(){
   if(lastActLbl!==ctxCache.l){lastActLbl=ctxCache.l;$('actIco').innerHTML=ctxCache.l==='—'?'':actGlyph(ctxCache.l);}
   actBtn.classList.toggle('dis',!!ctxCache.dis);
   const kb=document.body.classList.contains('kb'),ht=kb&&!ctxCache.dis&&ctxCache.l&&ctxCache.l!=='—'?`[Space] ${ctxCache.l} · ${ctxCache.h||''}`:(ctxCache.h||''),hint=$('actHint');if(hint.textContent!==ht)hint.textContent=ht;
-  document.body.classList.toggle('fishing',!!fish||!!rocket);
+  document.body.classList.toggle('fishing',!!fish||!!rocket||!!sandG);
   const hh=Math.floor(S.t/60)%24,mm=Math.floor((S.t%60)/10)*10;
   const cnt=bagItems().reduce((a,[,n])=>a+n,0);
   const f=festOn(),night=S.t>=1140||S.t<360,wx=S.storm?'storm':S.rain?'rain':night?'moon':'sun';
@@ -3579,5 +3689,5 @@ function openNaming(first){showModal(`<h2>${first?'ยินดีต้อน�
   <div class="row"><button class="btn" data-namego>${first?'เริ่มทำไร่':'ตกลง'}</button></div>`);}
 setTimeout(cloudInit,0);
 if(!hadSave)openNaming(true);else if(!S.pname)setTimeout(()=>{if(modal.hidden)openNaming(false);},600);
-if(location.protocol==='file:')window.__g={checkUnlocks,openPond,harvestPond,woCheck,woDeliver,giveRelic,RELICS,crowTick,nightPests,enterHouse,leaveHouse,openCarpenter,FURN,openWish,fwBurst,giveBerry,checkBerries,enterMine,openBook,get mine(){return mine},walkToBus,openMuseum,openJudge,startSand,DAED,get busFx(){return busFx},get sandG(){return sandG},enterArea,leaveArea,openBus,busGo,openHut,areaForage,AREAS,get scene(){return scene},openQuests,checkQuests,tapMove,get auto(){return auto},get camX(){return camX},get camY(){return camY},AU,buildAudio,schedule,openEval,evalScore,get S(){return S},set S(v){S=v},openNpc,sleep,openResto,openShip,folks,map,SOLID,applyUnlocks,resetFolks};
+if(location.protocol==='file:')window.__g={get fish(){return fish},talkLine,openNpc,get holdAct(){return holdAct},set holdAct(v){holdAct=v},get tipQ(){return tipQ},get TS(){return TS},checkUnlocks,openPond,harvestPond,woCheck,woDeliver,giveRelic,RELICS,crowTick,nightPests,enterHouse,leaveHouse,openCarpenter,FURN,openWish,fwBurst,giveBerry,checkBerries,enterMine,openBook,get mine(){return mine},walkToBus,openMuseum,openJudge,startSand,DAED,get busFx(){return busFx},get sandG(){return sandG},enterArea,leaveArea,openBus,busGo,openHut,areaForage,AREAS,get scene(){return scene},openQuests,checkQuests,tapMove,get auto(){return auto},get camX(){return camX},get camY(){return camY},AU,buildAudio,schedule,openEval,evalScore,get S(){return S},set S(v){S=v},openNpc,sleep,openResto,openShip,folks,map,SOLID,applyUnlocks,resetFolks};
 })();
